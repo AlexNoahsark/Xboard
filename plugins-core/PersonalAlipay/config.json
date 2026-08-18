@@ -1,0 +1,8 @@
+{
+    "name": "PersonalAlipay",
+    "code": "personal_alipay",
+    "type": "payment",
+    "version": "1.0.0",
+    "description": "个人支付宝收款码支付：展示收款码与专属尾款金额，配合手机 App 监听支付宝到账通知自动确认订单",
+    "author": "xboard-payment"
+}

@@ -32,3 +32,5 @@ compose.yaml
 compose.host.yaml
 compose.split.yaml
 .scribe
+# Personal Alipay collection QR code — never commit a real payment QR code image.
+plugins-core/PersonalAlipay/assets/qrcode.jpg
