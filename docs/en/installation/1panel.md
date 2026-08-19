@@ -60,9 +60,9 @@ apt update && apt install -y git
 yum update && yum install -y git
 
 # Clone repository
-git clone -b compose --depth 1 https://github.com/cedar2025/Xboard ./
+git clone -b compose --depth 1 https://github.com/AlexNoahsark/Xboard ./
 # (Optional shortcut: skip the clone and just fetch the sample file with
-#  curl -fsSL https://raw.githubusercontent.com/cedar2025/Xboard/master/compose.sample.yaml -o compose.yaml
+#  curl -fsSL https://raw.githubusercontent.com/AlexNoahsark/Xboard/master/compose.sample.yaml -o compose.yaml
 #  — the running PHP code is in the Docker image, not in the clone.)
 
 # Configure Docker Compose

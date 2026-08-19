@@ -15,11 +15,10 @@ systemctl start docker
 
 ### 2. Deployment Steps
 
-1. Clone the `compose` branch (it ships `compose.sample.yaml` and the other `compose.*.sample.yaml` variants):
+1. Clone the `compose` branch. It already ships a ready-to-use `compose.yaml` (default bridge-network setup) plus the other `compose.*.sample.yaml` variants for different setups — no copy step needed unless you switch variants (see the table below):
    ```bash
-   git clone -b compose --depth 1 https://github.com/cedar2025/Xboard
+   git clone -b compose --depth 1 https://github.com/AlexNoahsark/Xboard
    cd Xboard
-   cp compose.sample.yaml compose.yaml
    ```
 
 2. Install database:  
@@ -37,14 +36,14 @@ docker compose run -it --rm \
 docker compose run -it --rm xboard php artisan xboard:install
 ```
 > Please save the admin dashboard URL, username, and password shown after installation
-> The repository ships **four** compose templates in the `compose` branch — pick the one matching your setup, copy it to `compose.yaml`, then run the install command:
+> The `compose` branch ships **`compose.yaml`** (ready to use, default) plus **three** other templates — only copy one of these over `compose.yaml` if your setup needs it:
 >
 > | File | Network | When to use |
 > |------|---------|-------------|
-> | `compose.sample.yaml` | bridge + ports `7001:7001` | bare docker, custom reverse proxy, aaPanel + Docker (default) |
-> | `compose.host.sample.yaml` | `network_mode: host` | aaPanel native (openresty on host) |
-> | `compose.1panel.sample.yaml` | bridge + external `1panel-network` | 1Panel users (so the container can reach 1Panel-managed MySQL/Redis) |
-> | `compose.split.sample.yaml` | multi-container (web/horizon/ws-server/redis split) | K8s migration, advanced scaling |
+> | `compose.yaml` | bridge + ports `7001:7001` | bare docker, custom reverse proxy, aaPanel + Docker (default, used as-is) |
+> | `compose.host.sample.yaml` | `network_mode: host` | aaPanel native (openresty on host) — `cp compose.host.sample.yaml compose.yaml` |
+> | `compose.1panel.sample.yaml` | bridge + external `1panel-network` | 1Panel users (so the container can reach 1Panel-managed MySQL/Redis) — `cp compose.1panel.sample.yaml compose.yaml` |
+> | `compose.split.sample.yaml` | multi-container (web/horizon/ws-server/redis split) | K8s migration, advanced scaling — `cp compose.split.sample.yaml compose.yaml` |
 >
 > The local `compose.yaml` is gitignored so your edits survive `git pull` when you do clone the repo.
 
