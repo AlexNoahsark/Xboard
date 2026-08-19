@@ -6,13 +6,15 @@
 
 ## 配置步骤
 
-1. 把你自己的支付宝个人收款码图片放到 `plugins-core/PersonalAlipay/assets/qrcode.jpg`（仓库不包含这个文件，见 [assets/README.md](assets/README.md)）。
-2. 管理后台 → 支付方式 → 添加支付方式 → 选择「个人支付宝转账」，填写：
+1. 管理后台 → 支付方式 → 添加支付方式 → 选择「个人支付宝转账」，填写：
    - **Webhook Secret**：自定义一串随机字符串，需要和手机 App「设置」页填写的完全一致。
-   - **个人收款码图片地址**：`https://你的域名/api/v1/personal-alipay/qrcode.jpg`（对应第 1 步），或任意图床直链。
+   - **个人收款码图片地址**：默认已自动填好本站自托管地址 `https://你的域名/api/v1/personal-alipay/qrcode.jpg`，先直接保存即可，图片下一步再传。
    - **尾款随机范围（分）**：默认 99，一般无需修改。
+2. 上传收款码图片，二选一：
+   - **网页上传（推荐）**：浏览器打开 `https://你的域名/api/v1/personal-alipay/upload`，输入第 1 步保存的 Webhook Secret，选择图片，提交即可——地址不用改，还是 `.../qrcode.jpg`。
+   - **手动放置**：把图片放到服务器的 `plugins-core/PersonalAlipay/assets/qrcode.jpg`（仓库不包含这个文件，见 [assets/README.md](assets/README.md)），或者改成任意图床直链。
 3. 保存后即可在用户下单时选择「个人支付宝转账」支付方式。
-4. 下载并安装配套的 Android App，服务器地址填 `https://你的域名`，Webhook Secret 填第 2 步同一个值。
+4. 下载并安装配套的 Android App，服务器地址填 `https://你的域名`，Webhook Secret 填第 1 步同一个值。
 
 ## ⚠️ 重要：站点必须已经配置好正确的 HTTPS 域名
 
@@ -49,3 +51,4 @@ XBoard 生成网关地址、支付跳转链接时，用的是**当前这次请�
 | `/api/v1/personal-alipay/checkout/{trade_no}` | GET | 用户下单后跳转的收款页（二维码 + 金额） |
 | `/api/v1/personal-alipay/status/{trade_no}` | GET | 收款页轮询订单支付状态 |
 | `/api/v1/personal-alipay/qrcode.jpg` | GET | 自托管的收款码图片（可选） |
+| `/api/v1/personal-alipay/upload` | GET/POST | 网页上传收款码图片，需要 Webhook Secret |

@@ -36,21 +36,123 @@ class PersonalAlipayController extends Controller
         return response()->json(['success' => true]);
     }
 
+    private const QRCODE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+    /** Finds whichever qrcode.* file is currently stored, regardless of format. */
+    private function findQrcodeAsset(): ?string
+    {
+        $dir = __DIR__ . '/../assets';
+        foreach (self::QRCODE_EXTENSIONS as $ext) {
+            $path = "{$dir}/qrcode.{$ext}";
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
     /**
      * Serves the merchant's personal Alipay collection QR code image from this
      * plugin's own (bind-mounted, persistent) directory, so the admin doesn't
-     * need a third-party image host. Uploaded once via SFTP to
-     * plugins/PersonalAlipay/assets/qrcode.jpg.
+     * need a third-party image host. Place it there directly (assets/qrcode.jpg)
+     * or upload it via the /upload page below — either way this URL stays fixed.
      */
     public function qrcode(Request $request)
     {
-        $path = __DIR__ . '/../assets/qrcode.jpg';
-        if (!is_file($path)) {
+        $path = $this->findQrcodeAsset();
+        if (!$path) {
             abort(404);
         }
+        $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => 'image/jpeg',
+        };
         return response(file_get_contents($path))
-            ->header('Content-Type', 'image/jpeg')
+            ->header('Content-Type', $mime)
             ->header('Cache-Control', 'public, max-age=86400');
+    }
+
+    /**
+     * Tiny self-service upload form so the admin doesn't need SFTP/file-manager
+     * access just to set the collection QR code. Gated by the same webhook_secret
+     * already configured for this gateway — anyone who knows it can already forge
+     * payment confirmations, so this adds no new trust boundary.
+     */
+    public function uploadPage(Request $request)
+    {
+        return response($this->uploadPageHtml())->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    public function upload(Request $request)
+    {
+        $config = $this->config();
+        $secret = (string) ($config['webhook_secret'] ?? '');
+        $provided = (string) $request->input('secret', '');
+
+        if ($secret === '' || $provided === '' || !hash_equals($secret, $provided)) {
+            return response($this->uploadPageHtml('Webhook Secret 不正确，或尚未在「支付方式」里保存过一次配置'), 403)
+                ->header('Content-Type', 'text/html; charset=utf-8');
+        }
+
+        $request->validate(['qrcode' => 'required|image|max:5120']);
+
+        $dir = __DIR__ . '/../assets';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        foreach (self::QRCODE_EXTENSIONS as $ext) {
+            @unlink("{$dir}/qrcode.{$ext}");
+        }
+
+        $file = $request->file('qrcode');
+        $ext = strtolower((string) $file->getClientOriginalExtension());
+        if (!in_array($ext, self::QRCODE_EXTENSIONS, true)) {
+            $ext = 'jpg';
+        }
+        $file->move($dir, "qrcode.{$ext}");
+
+        $url = rtrim(url('/'), '/') . '/api/v1/personal-alipay/qrcode.jpg';
+        return response($this->uploadPageHtml(null, "上传成功！收款码地址（已自动生成，可直接粘贴到「支付方式」的图片地址字段）：<br><code>{$url}</code><br><a href=\"{$url}\" target=\"_blank\">预览图片</a>"))
+            ->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    private function uploadPageHtml(?string $error = null, ?string $success = null): string
+    {
+        $errorHtml = $error ? '<p style="color:#c0392b;background:#fdecea;padding:10px;border-radius:8px">' . htmlspecialchars($error, ENT_QUOTES) . '</p>' : '';
+        $successHtml = $success ? '<p style="color:#1e7e34;background:#e9f9ee;padding:10px;border-radius:8px;word-break:break-all">' . $success . '</p>' : '';
+
+        return <<<HTML
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上传支付宝收款码</title>
+<style>
+body{font-family:-apple-system,PingFang SC,Helvetica,Arial,sans-serif;background:#f5f6f8;margin:0;padding:24px}
+.card{max-width:400px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+label{font-size:13px;color:#666;margin-top:14px;display:block}
+input{width:100%;box-sizing:border-box;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ddd;font-size:14px}
+button{width:100%;padding:10px;margin-top:18px;border-radius:8px;border:none;background:#1677ff;color:#fff;font-size:15px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+  <h3 style="margin-top:0">上传支付宝收款码</h3>
+  {$errorHtml}
+  {$successHtml}
+  <form method="POST" enctype="multipart/form-data">
+    <label>Webhook Secret（需和「支付方式」里保存的一致）</label>
+    <input type="password" name="secret" required>
+    <label>收款码图片</label>
+    <input type="file" name="qrcode" accept="image/*" required>
+    <button type="submit">上传</button>
+  </form>
+</div>
+</body>
+</html>
+HTML;
     }
 
     /**

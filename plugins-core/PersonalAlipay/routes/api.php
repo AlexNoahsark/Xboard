@@ -10,3 +10,5 @@ Route::post('api/v1/personal-alipay/ping', [PersonalAlipayController::class, 'pi
 Route::get('api/v1/personal-alipay/checkout/{tradeNo}', [PersonalAlipayController::class, 'checkout']);
 Route::get('api/v1/personal-alipay/status/{tradeNo}', [PersonalAlipayController::class, 'status']);
 Route::get('api/v1/personal-alipay/qrcode.jpg', [PersonalAlipayController::class, 'qrcode']);
+Route::get('api/v1/personal-alipay/upload', [PersonalAlipayController::class, 'uploadPage']);
+Route::post('api/v1/personal-alipay/upload', [PersonalAlipayController::class, 'upload']);

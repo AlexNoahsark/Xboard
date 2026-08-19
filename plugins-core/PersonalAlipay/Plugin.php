@@ -51,7 +51,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                 'label' => '个人收款码图片地址',
                 'type' => 'string',
                 'required' => true,
-                'description' => '您的支付宝个人收款码图片直链（可上传到任意图床，或站点素材库后粘贴地址）',
+                'default' => url('/api/v1/personal-alipay/qrcode.jpg'),
+                'description' => '默认已填好本站自托管地址：先保存一次本页面，再访问 /api/v1/personal-alipay/upload 上传收款码图片（需输入这里的 Webhook Secret）即可；也可以改成任意图床直链',
             ],
             'fingerprint_max_cents' => [
                 'label' => '尾款随机范围（分）',
